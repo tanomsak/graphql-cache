@@ -55,6 +55,7 @@ module GraphQL
       # Produces the portion of the key representing the parent object
       def object_clause
         return nil unless object
+        return nil if object.is_a?(Hash)
 
         "#{object.class.name}:#{object_identifier}"
       end
@@ -70,8 +71,22 @@ module GraphQL
       end
 
       # Produces the portion of the key representing the query arguments
+
+      def deep_to_h(obj)
+        temp = {}
+        obj.each do |k, v|
+          if v.respond_to?(:keys)
+            temp[k] = deep_to_h(v)
+          else
+            temp[k] = v
+          end
+        end
+        temp
+      end     
+
       def arguments_clause
-        @arguments_clause ||= arguments.to_h.to_a.flatten
+        # @arguments_clause ||= arguments.to_h.to_a.flatten
+        @arguments_clause ||= deep_to_h(arguments).to_a.flatten
       end
 
       # @private
